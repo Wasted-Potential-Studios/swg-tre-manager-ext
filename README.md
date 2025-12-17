@@ -13,7 +13,8 @@ A comprehensive Visual Studio Code extension for browsing, extracting, building,
 
 ### 📦 Activity Bar Browser
 - **Visual tree view** of all TRE archives in your workspace
-- **Automatic categorization** by location (Client Assets, Server Data, Custom, Other)
+- **Smart categorization** by filename patterns (Official Client Data, Patches, Custom Mods, Server Files)
+- **Works with any workspace structure** - no specific folder names required
 - **File statistics** showing file counts and total sizes
 - **Expandable folders** to browse archive contents
 - **Quick access** to all archives from the Activity Bar
@@ -87,12 +88,17 @@ A comprehensive Visual Studio Code extension for browsing, extracting, building,
 
 ### Browsing Archives
 
-The extension automatically scans your workspace for `.tre` files and displays them categorized:
+The extension automatically scans your workspace for `.tre` files and intelligently categorizes them:
 
-- **📦 Client Assets** - Files in `client-assets-master` or similar
-- **🎮 Server Data** - Files in `serverdata` directories
-- **🔧 Custom Archives** - User-created archives
-- **📂 Other Locations** - All other TRE files
+- **📦 Official Client Data** - `data_*.tre` files (textures, meshes, animations, etc.)
+- **🔧 Official Patches** - `patch_*.tre`, `hotfix_*.tre`, `default_patch.tre`
+- **🎮 Custom Content** - **All user-created TRE files** with any name!
+  - Community mods: `beginnings_*.tre`, `legends_*.tre`
+  - Your custom files: `mymod.tre`, `newcontent.tre`, anything!
+  - Server mods: `myserver_*.tre`, `custom_*.tre`
+- **⚙️ Server Files** - `bottom.tre` and files in serverdata folders
+
+**Works with ANY TRE filename** - no configuration needed!
 
 Click any archive to expand and browse its contents.
 
@@ -143,12 +149,20 @@ For `.iff`, `.tab`, or `.stf` files:
 
 Access settings via `File > Preferences > Settings` and search for "SWG TRE":
 
-- **`swg-tre-manager.defaultExtractionPath`** - Default extraction destination
-- **`swg-tre-manager.autoDetectTreFiles`** - Auto-detect TRE files (default: true)
-- **`swg-tre-manager.showFileCount`** - Show file counts in tree (default: true)
-- **`swg-tre-manager.showFileSize`** - Show file sizes in tree (default: true)
+### Basic Settings
+- **`swg-tre-manager.autoDetectTreFiles`** - Auto-detect TRE files in workspace (default: true)
+- **`swg-tre-manager.defaultExtractionPath`** - Default extraction destination (leave empty to prompt)
+- **`swg-tre-manager.showFileCount`** - Show file counts in tree view (default: true)
+- **`swg-tre-manager.showFileSize`** - Show file sizes in tree view (default: true)
+
+### Archive Building
 - **`swg-tre-manager.defaultCompression`** - Enable compression by default (default: true)
 - **`swg-tre-manager.defaultVersion`** - Default TRE version for new archives (default: "0005")
+
+### Advanced Settings
+- **`swg-tre-manager.excludePatterns`** - Folders to exclude when scanning
+  - Default: `["**/node_modules/**", "**/backup/**", "**/.git/**"]`
+- **`swg-tre-manager.maxFilesToScan`** - Maximum TRE files to scan (default: 5000)
 
 ## Supported Features
 

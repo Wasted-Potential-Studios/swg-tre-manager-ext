@@ -21,42 +21,68 @@ export class TreParser {
      * Parse TRE file and return complete archive data
      */
     static parseFile(filePath: string): TreArchive {
-        const buffer = fs.readFileSync(filePath);
+        try {
+            // Check if file exists and is readable
+            if (!fs.existsSync(filePath)) {
+                throw new Error(`File not found: ${filePath}`);
+            }
 
-        // Parse header
-        const header = this.parseHeader(buffer);
+            const stats = fs.statSync(filePath);
+            if (!stats.isFile()) {
+                throw new Error(`Not a file: ${filePath}`);
+            }
 
-        // Parse TOC
-        const toc = this.parseToc(buffer, header);
+            if (stats.size < TRE_CONSTANTS.HEADER_SIZE) {
+                throw new InvalidFormatError(`File too small (${stats.size} bytes) to be a valid TRE archive`);
+            }
 
-        // Parse name block
-        const names = this.parseNameBlock(buffer, header);
+            const buffer = fs.readFileSync(filePath);
 
-        // Parse MD5 block (version 0005 only)
-        let md5Hashes: string[] | undefined;
-        if (header.version === TRE_CONSTANTS.VERSION_0005) {
-            md5Hashes = this.parseMd5Block(buffer, header);
+            // Parse header
+            const header = this.parseHeader(buffer);
+
+            // Parse TOC
+            const toc = this.parseToc(buffer, header);
+
+            // Parse name block
+            const names = this.parseNameBlock(buffer, header);
+
+            // Parse MD5 block (version 0005 only)
+            let md5Hashes: string[] | undefined;
+            if (header.version === TRE_CONSTANTS.VERSION_0005) {
+                md5Hashes = this.parseMd5Block(buffer, header);
+            }
+
+            // Build file list
+            const files = this.buildFileList(header, toc, names, md5Hashes);
+
+            // Calculate statistics
+            const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+            const compressedSize = files.reduce((sum, file) => sum + file.compressedSize, 0);
+            const compressionRatio = totalSize > 0 ? compressedSize / totalSize : 0;
+
+            const version = header.version === TRE_CONSTANTS.VERSION_0005 ? '0005' : '0004';
+
+            return {
+                path: filePath,
+                header,
+                files,
+                totalSize,
+                compressedSize,
+                compressionRatio,
+                version
+            };
+        } catch (error) {
+            if (error instanceof InvalidFormatError ||
+                error instanceof UnsupportedVersionError ||
+                error instanceof CorruptedArchiveError) {
+                throw error;
+            }
+
+            // Wrap other errors with more context
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to parse TRE file '${filePath}': ${message}`);
         }
-
-        // Build file list
-        const files = this.buildFileList(header, toc, names, md5Hashes);
-
-        // Calculate statistics
-        const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-        const compressedSize = files.reduce((sum, file) => sum + file.compressedSize, 0);
-        const compressionRatio = totalSize > 0 ? compressedSize / totalSize : 0;
-
-        const version = header.version === TRE_CONSTANTS.VERSION_0005 ? '0005' : '0004';
-
-        return {
-            path: filePath,
-            header,
-            files,
-            totalSize,
-            compressedSize,
-            compressionRatio,
-            version
-        };
     }
 
     /**
@@ -127,8 +153,9 @@ export class TreParser {
 
     /**
      * Parse name block
+     * Returns the raw buffer so we can read names by byte offset
      */
-    static parseNameBlock(buffer: Buffer, header: TreHeader): string[] {
+    static parseNameBlock(buffer: Buffer, header: TreHeader): Buffer {
         // Calculate name block offset (after TOC)
         const nameBlockOffset = header.tocOffset + header.sizeOfTOC;
 
@@ -144,24 +171,7 @@ export class TreParser {
             throw new CorruptedArchiveError('Name block size mismatch');
         }
 
-        // Parse null-terminated strings
-        const names: string[] = [];
-        let currentName = '';
-
-        for (let i = 0; i < nameData.length; i++) {
-            const byte = nameData[i];
-
-            if (byte === 0) {
-                if (currentName.length > 0) {
-                    names.push(currentName);
-                    currentName = '';
-                }
-            } else {
-                currentName += String.fromCharCode(byte);
-            }
-        }
-
-        return names;
+        return nameData;
     }
 
     /**
@@ -190,12 +200,12 @@ export class TreParser {
     }
 
     /**
-     * Build file list from TOC and names
+     * Build file list from TOC and name buffer
      */
     static buildFileList(
         header: TreHeader,
         toc: TocEntry[],
-        names: string[],
+        nameBuffer: Buffer,
         md5Hashes?: string[]
     ): TreFile[] {
         const files: TreFile[] = [];
@@ -208,8 +218,8 @@ export class TreParser {
                 continue;
             }
 
-            // Get filename from name block
-            const name = this.getNameFromOffset(names, entry.nameOffset);
+            // Get filename from name block using byte offset
+            const name = this.getNameFromOffset(nameBuffer, entry.nameOffset);
 
             files.push({
                 name,
@@ -231,16 +241,24 @@ export class TreParser {
     }
 
     /**
-     * Get filename from name block using offset
+     * Get filename from name block using byte offset
      */
-    private static getNameFromOffset(names: string[], offset: number): string {
-        // The offset indicates which string in the names array
-        // This is a simplified implementation - actual implementation
-        // would track byte offsets within the name block
-        if (offset >= 0 && offset < names.length) {
-            return names[offset];
+    private static getNameFromOffset(nameBuffer: Buffer, offset: number): string {
+        if (offset < 0 || offset >= nameBuffer.length) {
+            return `unknown_${offset}`;
         }
-        return `unknown_${offset}`;
+
+        // Read null-terminated string from the byte offset
+        let name = '';
+        for (let i = offset; i < nameBuffer.length; i++) {
+            const byte = nameBuffer[i];
+            if (byte === 0) {
+                break;
+            }
+            name += String.fromCharCode(byte);
+        }
+
+        return name || `unknown_${offset}`;
     }
 
     /**

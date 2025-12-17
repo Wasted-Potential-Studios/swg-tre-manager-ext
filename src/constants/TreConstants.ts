@@ -129,8 +129,8 @@ export const TREE_ITEM_CONTEXT = {
  * Category names for archive organization
  */
 export const ARCHIVE_CATEGORIES = {
-    CLIENT_ASSETS: 'Client Assets',
-    SERVER_DATA: 'Server Data',
-    CUSTOM: 'Custom Archives',
-    OTHER: 'Other Locations',
+    CLIENT_DATA: 'Official Client Data',
+    PATCHES: 'Official Patches',
+    CUSTOM_CONTENT: 'Custom Content',
+    SERVER_FILES: 'Server Files',
 } as const;

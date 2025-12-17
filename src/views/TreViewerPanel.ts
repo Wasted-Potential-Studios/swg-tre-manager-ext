@@ -209,11 +209,47 @@ export class TreViewerPanel {
             color: ${WPS_COLORS.primaryPurple};
         }
 
+        .search-box {
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: ${WPS_COLORS.darkGray};
+            padding: 15px 0;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid ${WPS_COLORS.borderGray};
+            border-radius: 6px;
+            color: ${WPS_COLORS.white};
+            font-size: 14px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: ${WPS_COLORS.primaryPurple};
+        }
+
+        .search-input::placeholder {
+            color: ${WPS_COLORS.mediumText};
+        }
+
+        .search-results {
+            margin-top: 10px;
+            font-size: 12px;
+            color: ${WPS_COLORS.mediumText};
+        }
+
         .file-list {
             background: rgba(42, 42, 42, 0.6);
             border: 1px solid ${WPS_COLORS.borderGray};
             border-radius: 8px;
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
         }
 
@@ -338,7 +374,17 @@ export class TreViewerPanel {
 
     <div id="contents" class="tab-content active">
         <h2 class="section-title">Archive Contents</h2>
-        <div class="file-list">
+        <div class="search-box">
+            <input type="text"
+                   id="searchInput"
+                   class="search-input"
+                   placeholder="🔍 Search files... (e.g., jacket, .mgn, appearance/mesh/)"
+                   oninput="filterFiles()">
+            <div class="search-results" id="searchResults">
+                Showing all ${fileCount.toLocaleString()} files
+            </div>
+        </div>
+        <div class="file-list" id="fileList">
             ${this.generateFileList(archive)}
         </div>
     </div>
@@ -406,6 +452,9 @@ export class TreViewerPanel {
     </div>
 
     <script>
+        // Store all files data for filtering
+        const allFiles = ${JSON.stringify(archive.files.map(f => ({ name: f.name, size: f.size })))};
+
         function showTab(tabName) {
             // Hide all tabs
             const tabContents = document.getElementsByClassName('tab-content');
@@ -423,31 +472,75 @@ export class TreViewerPanel {
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
         }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function filterFiles() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            const fileList = document.getElementById('fileList');
+            const searchTerm = searchInput.value.toLowerCase();
+
+            if (!searchTerm) {
+                // Show all files
+                const html = allFiles.map(file =>
+                    '<div class="file-item">' +
+                    '<span class="file-name">' + escapeHtml(file.name) + '</span>' +
+                    '<span class="file-size">' + formatFileSize(file.size) + '</span>' +
+                    '</div>'
+                ).join('');
+
+                fileList.innerHTML = html;
+                searchResults.textContent = 'Showing all ' + allFiles.length.toLocaleString() + ' files';
+                return;
+            }
+
+            // Filter files
+            const filtered = allFiles.filter(file =>
+                file.name.toLowerCase().includes(searchTerm)
+            );
+
+            // Generate HTML for filtered results
+            const html = filtered.length > 0
+                ? filtered.map(file =>
+                    '<div class="file-item">' +
+                    '<span class="file-name">' + escapeHtml(file.name) + '</span>' +
+                    '<span class="file-size">' + formatFileSize(file.size) + '</span>' +
+                    '</div>'
+                  ).join('')
+                : '<div class="file-item" style="justify-content: center; color: #999;">' +
+                  '<span class="file-name">No files found matching "' + escapeHtml(searchTerm) + '"</span>' +
+                  '</div>';
+
+            fileList.innerHTML = html;
+            searchResults.textContent = 'Found ' + filtered.length.toLocaleString() + ' of ' + allFiles.length.toLocaleString() + ' files';
+        }
     </script>
 </body>
 </html>`;
     }
 
     private generateFileList(archive: TreArchive): string {
-        // Limit to first 100 files for performance
-        const maxFiles = 100;
-        const files = archive.files.slice(0, maxFiles);
-
+        // Show all files - filtering is handled by JavaScript in the browser
         let html = '';
-        for (const file of files) {
+        for (const file of archive.files) {
             const size = FileUtil.formatFileSize(file.size);
             html += `
                 <div class="file-item">
                     <span class="file-name">${this.escapeHtml(file.name)}</span>
                     <span class="file-size">${size}</span>
-                </div>
-            `;
-        }
-
-        if (archive.files.length > maxFiles) {
-            html += `
-                <div class="file-item" style="background: rgba(155, 89, 182, 0.1); justify-content: center;">
-                    <span class="file-name">... and ${archive.files.length - maxFiles} more files</span>
                 </div>
             `;
         }

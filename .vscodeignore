@@ -11,6 +11,12 @@ tsconfig.json
 **/*.md
 !README.md
 !CHANGELOG.md
+!LICENSE.md
+MARKETPLACE_READY.md
+TESTING_GUIDE.md
+IMPLEMENTATION_PLAN.md
+COMPLETION_SUMMARY.md
+CONTRIBUTING.md
 test/**
 resources/marketplace/**
 docs/**

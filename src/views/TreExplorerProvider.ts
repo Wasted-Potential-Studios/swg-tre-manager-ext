@@ -54,8 +54,8 @@ export class TreExplorerProvider implements vscode.TreeDataProvider<TreItem> {
         }
 
         if (element.type === 'category') {
-            // Return archives in category
-            return this.getArchivesInCategory(element.label);
+            // Return archives in category - use contextValue which has the category name without count
+            return this.getArchivesInCategory(element.contextValue || element.label);
         }
 
         if (element.type === 'archive') {
@@ -76,21 +76,26 @@ export class TreExplorerProvider implements vscode.TreeDataProvider<TreItem> {
      */
     private getRootItems(): TreItem[] {
         const categories = [
-            ARCHIVE_CATEGORIES.CLIENT_ASSETS,
-            ARCHIVE_CATEGORIES.SERVER_DATA,
-            ARCHIVE_CATEGORIES.CUSTOM,
-            ARCHIVE_CATEGORIES.OTHER
+            ARCHIVE_CATEGORIES.CLIENT_DATA,
+            ARCHIVE_CATEGORIES.PATCHES,
+            ARCHIVE_CATEGORIES.CUSTOM_CONTENT,
+            ARCHIVE_CATEGORIES.SERVER_FILES
         ];
 
         return categories.map(category => {
             const count = this.getArchiveCountInCategory(category);
             const label = count > 0 ? `${category} (${count})` : category;
 
-            return new TreItem(
+            const item = new TreItem(
                 label,
                 'category',
                 vscode.TreeItemCollapsibleState.Expanded
             );
+
+            // Store the actual category name (without count) for matching
+            item.contextValue = category;
+
+            return item;
         });
     }
 
@@ -292,22 +297,37 @@ export class TreExplorerProvider implements vscode.TreeDataProvider<TreItem> {
     }
 
     /**
-     * Get category for archive based on path
+     * Get category for archive based on filename patterns
+     * Works with any workspace structure - categorizes by TRE naming conventions
+     * Default: All user-created TRE files go to 'Custom Content' - no file is left behind!
      */
     private getCategoryForArchive(archivePath: string): string {
-        const normalized = archivePath.toLowerCase().replace(/\\/g, '/');
+        const filename = path.basename(archivePath).toLowerCase();
 
-        if (normalized.includes('client-assets')) {
-            return ARCHIVE_CATEGORIES.CLIENT_ASSETS;
-        }
-        if (normalized.includes('serverdata')) {
-            return ARCHIVE_CATEGORIES.SERVER_DATA;
-        }
-        if (normalized.includes('custom')) {
-            return ARCHIVE_CATEGORIES.CUSTOM;
+        // Official SOE client data files (data_*.tre)
+        if (filename.startsWith('data_')) {
+            return ARCHIVE_CATEGORIES.CLIENT_DATA;
         }
 
-        return ARCHIVE_CATEGORIES.OTHER;
+        // Official SOE patches (patch_*.tre, hotfix_*.tre, default_patch.tre)
+        if (filename.startsWith('patch_') ||
+            filename.startsWith('hotfix_') ||
+            filename === 'default_patch.tre') {
+            return ARCHIVE_CATEGORIES.PATCHES;
+        }
+
+        // Server-specific files (bottom.tre is the main server TRE)
+        if (filename === 'bottom.tre' ||
+            archivePath.toLowerCase().includes('/serverdata/') ||
+            archivePath.toLowerCase().includes('\\serverdata\\') ||
+            archivePath.toLowerCase().includes('/server-data/') ||
+            archivePath.toLowerCase().includes('\\server-data\\')) {
+            return ARCHIVE_CATEGORIES.SERVER_FILES;
+        }
+
+        // Everything else is custom content (mods, user-created, community servers, etc.)
+        // This includes: beginnings_*.tre, legends_*.tre, myserver_*.tre, mymod.tre, anything!
+        return ARCHIVE_CATEGORIES.CUSTOM_CONTENT;
     }
 
     /**
@@ -331,24 +351,74 @@ export class TreExplorerProvider implements vscode.TreeDataProvider<TreItem> {
         const autoDetect = config.get<boolean>('autoDetectTreFiles', true);
 
         if (!autoDetect) {
+            console.log('SWG TRE Manager: Auto-detect disabled');
             return;
         }
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
+            console.log('SWG TRE Manager: No workspace folders found');
             return;
         }
 
-        // Search for .tre files
-        const files = await vscode.workspace.findFiles('**/*.tre', '**/node_modules/**', 1000);
+        console.log('SWG TRE Manager: Scanning for TRE files...');
 
-        for (const file of files) {
-            try {
-                const archive = TreParser.parseFile(file.fsPath);
-                this.archives.set(file.fsPath, archive);
-            } catch (error) {
-                console.error(`Failed to parse TRE file ${file.fsPath}:`, error);
+        try {
+            // Get user-configurable settings
+            const excludePatterns = config.get<string[]>('excludePatterns', ['**/node_modules/**', '**/backup/**', '**/.git/**']);
+            const maxFiles = config.get<number>('maxFilesToScan', 5000);
+
+            // Build exclude pattern (combine all patterns with comma)
+            const excludePattern = excludePatterns.length > 0 ? `{${excludePatterns.join(',')}}` : '**/node_modules/**';
+
+            // Search for .tre files
+            const files = await vscode.workspace.findFiles('**/*.tre', excludePattern, maxFiles);
+            console.log(`SWG TRE Manager: Found ${files.length} TRE file(s)`);
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const file of files) {
+                try {
+                    console.log(`SWG TRE Manager: Parsing ${file.fsPath}...`);
+                    const archive = TreParser.parseFile(file.fsPath);
+                    this.archives.set(file.fsPath, archive);
+                    successCount++;
+                    console.log(`SWG TRE Manager: Successfully parsed ${file.fsPath} (${archive.files.length} files)`);
+                } catch (error) {
+                    failCount++;
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    console.error(`SWG TRE Manager: Failed to parse TRE file ${file.fsPath}:`, errorMsg);
+
+                    // Show notification for first few failures
+                    if (failCount <= 3) {
+                        vscode.window.showWarningMessage(
+                            `Failed to parse ${file.fsPath.split(/[/\\]/).pop()}: ${errorMsg}`
+                        );
+                    }
+                }
             }
+
+            console.log(`SWG TRE Manager: Scan complete. Success: ${successCount}, Failed: ${failCount}`);
+
+            // Notify tree view to refresh after scan completes
+            this._onDidChangeTreeData.fire();
+
+            if (successCount > 0) {
+                vscode.window.showInformationMessage(
+                    `SWG TRE Manager: Found ${successCount} TRE archive(s)${failCount > 0 ? ` (${failCount} failed to parse)` : ''}`
+                );
+            } else if (files.length > 0) {
+                vscode.window.showWarningMessage(
+                    `SWG TRE Manager: Found ${files.length} .tre file(s) but none could be parsed. Check the output console for errors.`
+                );
+            } else {
+                console.log('SWG TRE Manager: No .tre files found in workspace');
+            }
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.error('SWG TRE Manager: Error during workspace scan:', errorMsg);
+            vscode.window.showErrorMessage(`SWG TRE Manager: Scan failed - ${errorMsg}`);
         }
     }
 

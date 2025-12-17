@@ -7,6 +7,8 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
 import { TreParser } from '../parsers/TreParser';
 import { TreArchive, TreFile, ExtractionOptions, ProgressCallback } from '../types/TreTypes';
 import { FileUtil } from '../utils/FileUtil';
@@ -16,6 +18,30 @@ import { DEFAULT_EXTRACTION_OPTIONS } from '../constants/TreConstants';
  * TRE extraction class
  */
 export class TreExtractor {
+    /**
+     * Extract a single file to temp directory for viewing
+     */
+    static async extractToTemp(
+        archive: TreArchive,
+        file: TreFile
+    ): Promise<string> {
+        const data = TreParser.extractFile(archive.path, file);
+
+        // Create temp directory for TRE files
+        const tempDir = path.join(os.tmpdir(), 'swg-tre-manager');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        // Use just the file basename to avoid path issues
+        const fileName = path.basename(file.name);
+        const tempPath = path.join(tempDir, fileName);
+
+        FileUtil.writeBinaryFile(tempPath, data);
+
+        return tempPath;
+    }
+
     /**
      * Extract a single file
      */

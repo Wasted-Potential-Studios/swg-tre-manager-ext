@@ -29,6 +29,16 @@ export function activate(context: vscode.ExtensionContext) {
     // Register all commands
     registerCommands(context, treExplorer, treeView);
 
+    // Handle tree view selection - open files on double-click
+    treeView.onDidChangeSelection(e => {
+        if (e.selection.length > 0) {
+            const item = e.selection[0];
+            if (item.type === 'file') {
+                vscode.commands.executeCommand('swg-tre-manager.openFile', item);
+            }
+        }
+    });
+
     // Show welcome message
     vscode.window.showInformationMessage(
         'SWG TRE Archive Manager loaded! Check the Activity Bar for TRE files.'
