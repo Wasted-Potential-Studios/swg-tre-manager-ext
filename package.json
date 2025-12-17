@@ -1,0 +1,307 @@
+{
+    "name": "swg-tre-manager",
+    "displayName": "SWG TRE Archive Manager",
+    "description": "Browse, extract, build, and manage Star Wars Galaxies TRE archive files",
+    "version": "1.0.0",
+    "publisher": "WastedPotentialStudios",
+    "author": {
+        "name": "Wasted Potential Studios",
+        "url": "https://github.com/Wasted-Potential-Studios"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Wasted-Potential-Studios/swg-tre-manager.git"
+    },
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Formatters",
+        "Other"
+    ],
+    "keywords": [
+        "swg",
+        "star wars galaxies",
+        "tre",
+        "archive",
+        "game development",
+        "modding",
+        "asset management"
+    ],
+    "icon": "resources/icon.png",
+    "galleryBanner": {
+        "color": "#9b59b6",
+        "theme": "dark"
+    },
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "swg-tre-container",
+                    "title": "SWG TRE Manager",
+                    "icon": "resources/icons/tre-icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "swg-tre-container": [
+                {
+                    "id": "swg-tre-explorer",
+                    "name": "TRE Archives",
+                    "icon": "resources/icons/tre-icon.svg",
+                    "contextualTitle": "SWG TRE Archives"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "swg-tre-manager.refresh",
+                "title": "Refresh TRE Archives",
+                "category": "SWG TRE",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "swg-tre-manager.openArchive",
+                "title": "Open TRE Archive",
+                "category": "SWG TRE",
+                "icon": "$(folder-opened)"
+            },
+            {
+                "command": "swg-tre-manager.extractFile",
+                "title": "Extract File",
+                "category": "SWG TRE",
+                "icon": "$(export)"
+            },
+            {
+                "command": "swg-tre-manager.extractFolder",
+                "title": "Extract Folder",
+                "category": "SWG TRE",
+                "icon": "$(folder-opened)"
+            },
+            {
+                "command": "swg-tre-manager.extractAll",
+                "title": "Extract All Files",
+                "category": "SWG TRE",
+                "icon": "$(export)"
+            },
+            {
+                "command": "swg-tre-manager.validateArchive",
+                "title": "Validate Archive",
+                "category": "SWG TRE",
+                "icon": "$(check)"
+            },
+            {
+                "command": "swg-tre-manager.compareArchive",
+                "title": "Compare with Another Archive",
+                "category": "SWG TRE",
+                "icon": "$(diff)"
+            },
+            {
+                "command": "swg-tre-manager.showProperties",
+                "title": "Show Archive Properties",
+                "category": "SWG TRE",
+                "icon": "$(info)"
+            },
+            {
+                "command": "swg-tre-manager.buildArchive",
+                "title": "Build New TRE Archive",
+                "category": "SWG TRE",
+                "icon": "$(archive)"
+            },
+            {
+                "command": "swg-tre-manager.convertVersion",
+                "title": "Convert Archive Version",
+                "category": "SWG TRE",
+                "icon": "$(symbol-namespace)"
+            },
+            {
+                "command": "swg-tre-manager.openInIffEditor",
+                "title": "Open in IFF Editor",
+                "category": "SWG TRE",
+                "icon": "$(file-code)"
+            },
+            {
+                "command": "swg-tre-manager.openInDataTableEditor",
+                "title": "Open in DataTable Editor",
+                "category": "SWG TRE",
+                "icon": "$(table)"
+            },
+            {
+                "command": "swg-tre-manager.openInStfEditor",
+                "title": "Open in STF Editor",
+                "category": "SWG TRE",
+                "icon": "$(symbol-string)"
+            },
+            {
+                "command": "swg-tre-manager.searchArchives",
+                "title": "Search in TRE Archives",
+                "category": "SWG TRE",
+                "icon": "$(search)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "swg-tre-manager.refresh",
+                    "when": "view == swg-tre-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "swg-tre-manager.buildArchive",
+                    "when": "view == swg-tre-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "swg-tre-manager.searchArchives",
+                    "when": "view == swg-tre-explorer",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "swg-tre-manager.openArchive",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "swg-tre-manager.extractFile",
+                    "when": "view == swg-tre-explorer && viewItem == treFile",
+                    "group": "1_extraction@1"
+                },
+                {
+                    "command": "swg-tre-manager.extractFolder",
+                    "when": "view == swg-tre-explorer && viewItem == treFolder",
+                    "group": "1_extraction@1"
+                },
+                {
+                    "command": "swg-tre-manager.extractAll",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "1_extraction@2"
+                },
+                {
+                    "command": "swg-tre-manager.openInIffEditor",
+                    "when": "view == swg-tre-explorer && viewItem == treFile && resourceExtname == .iff",
+                    "group": "2_open@1"
+                },
+                {
+                    "command": "swg-tre-manager.openInDataTableEditor",
+                    "when": "view == swg-tre-explorer && viewItem == treFile && resourceExtname == .tab",
+                    "group": "2_open@2"
+                },
+                {
+                    "command": "swg-tre-manager.openInStfEditor",
+                    "when": "view == swg-tre-explorer && viewItem == treFile && resourceExtname == .stf",
+                    "group": "2_open@3"
+                },
+                {
+                    "command": "swg-tre-manager.validateArchive",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "3_manage@1"
+                },
+                {
+                    "command": "swg-tre-manager.compareArchive",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "3_manage@2"
+                },
+                {
+                    "command": "swg-tre-manager.showProperties",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "3_manage@3"
+                },
+                {
+                    "command": "swg-tre-manager.convertVersion",
+                    "when": "view == swg-tre-explorer && viewItem == treArchive",
+                    "group": "3_manage@4"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "swg-tre-manager.extractFile",
+                    "when": "false"
+                },
+                {
+                    "command": "swg-tre-manager.extractFolder",
+                    "when": "false"
+                },
+                {
+                    "command": "swg-tre-manager.openInIffEditor",
+                    "when": "false"
+                },
+                {
+                    "command": "swg-tre-manager.openInDataTableEditor",
+                    "when": "false"
+                },
+                {
+                    "command": "swg-tre-manager.openInStfEditor",
+                    "when": "false"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "SWG TRE Manager",
+            "properties": {
+                "swg-tre-manager.defaultExtractionPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Default path for extracting files from TRE archives. Leave empty to prompt each time."
+                },
+                "swg-tre-manager.autoDetectTreFiles": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically detect and list TRE files in the workspace."
+                },
+                "swg-tre-manager.showFileCount": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show file count next to archive names in the tree view."
+                },
+                "swg-tre-manager.showFileSize": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show total file size next to archive names in the tree view."
+                },
+                "swg-tre-manager.defaultCompression": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable compression by default when building new archives."
+                },
+                "swg-tre-manager.defaultVersion": {
+                    "type": "string",
+                    "enum": [
+                        "0004",
+                        "0005"
+                    ],
+                    "default": "0005",
+                    "description": "Default TRE version for new archives."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js",
+        "package": "vsce package"
+    },
+    "dependencies": {
+        "pako": "^2.1.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.85.0",
+        "@types/pako": "^2.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "@vscode/test-electron": "^2.3.0",
+        "eslint": "^8.0.0",
+        "typescript": "^5.0.0",
+        "@vscode/vsce": "^2.22.0"
+    }
+}

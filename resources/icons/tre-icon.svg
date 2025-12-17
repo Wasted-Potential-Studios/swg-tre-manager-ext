@@ -1,0 +1,22 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="128" height="128" fill="#1a1a1a" rx="12"/>
+
+  <!-- Archive box shape -->
+  <g transform="translate(24, 24)">
+    <!-- Top lid -->
+    <path d="M 10 10 L 40 0 L 70 10 L 40 20 Z" fill="#9b59b6" opacity="0.8"/>
+
+    <!-- Front face -->
+    <path d="M 10 10 L 10 60 L 40 70 L 40 20 Z" fill="#8e44ad"/>
+
+    <!-- Side face -->
+    <path d="M 40 20 L 40 70 L 70 60 L 70 10 Z" fill="#7d3c98"/>
+
+    <!-- Highlight -->
+    <rect x="15" y="25" width="20" height="30" fill="#ffffff" opacity="0.1" rx="2"/>
+
+    <!-- TRE text -->
+    <text x="40" y="85" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#9b59b6" text-anchor="middle">TRE</text>
+  </g>
+</svg>

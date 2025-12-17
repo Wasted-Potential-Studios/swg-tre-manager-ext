@@ -1,0 +1,17 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+.vscodeignore
+**/*.map
+**/*.ts
+tsconfig.json
+.eslintrc.json
+**/.eslintrc.json
+**/*.md
+!README.md
+!CHANGELOG.md
+test/**
+resources/marketplace/**
+docs/**
+IMPLEMENTATION_PLAN.md
