@@ -63,7 +63,7 @@ A comprehensive Visual Studio Code extension for browsing, extracting, building,
 ## Installation
 
 ### From VSIX
-1. Download the `.vsix` file from [Releases](https://github.com/Wasted-Potential-Studios/swg-tre-manager/releases)
+1. Download the `.vsix` file from [Releases](https://github.com/Wasted-Potential-Studios/swg-tre-manager-ext/releases)
 2. Open VS Code
 3. Go to Extensions view (`Ctrl+Shift+X`)
 4. Click "..." menu → "Install from VSIX..."
@@ -200,7 +200,7 @@ Access settings via `File > Preferences > Settings` and search for "SWG TRE":
 
 We welcome contributions! Here's how:
 
-1. Fork the repository at https://github.com/Wasted-Potential-Studios/swg-tre-manager
+1. Fork the repository at https://github.com/Wasted-Potential-Studios/swg-tre-manager-ext
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
@@ -215,8 +215,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/Wasted-Potential-Studios/swg-tre-manager/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Wasted-Potential-Studios/swg-tre-manager/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Wasted-Potential-Studios/swg-tre-manager-ext/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Wasted-Potential-Studios/swg-tre-manager-ext/discussions)
 - **Email**: support@wastedpotential.studio
 
 ## License

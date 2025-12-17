@@ -11,7 +11,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Wasted-Potential-Studios/swg-tre-manager.git"
+        "url": "https://github.com/Wasted-Potential-Studios/swg-tre-manager-ext.git"
     },
     "engines": {
         "vscode": "^1.85.0"
